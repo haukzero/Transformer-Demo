@@ -12,7 +12,7 @@ python main.py
 
 ## 项目结构
 
-本项目主要借鉴了 [nlp-tutorial/Transformer.py](https://github.com/graykode/nlp-tutorial/blob/master/5-1.Transformer/Transformer.py) 文件，并在其基础上进行模块文件拆分及重要代码注释，使其结构更加清晰
+本项目主要借鉴了 [nlp-tutorial/5-1.Transformer](https://github.com/graykode/nlp-tutorial/tree/master/5-1.Transformer) 文件，并在其基础上进行模块文件拆分及重要代码注释，使其结构更加清晰
 
 - `model`:
   - `config.json`: 包含模型构建中需要用到的参数

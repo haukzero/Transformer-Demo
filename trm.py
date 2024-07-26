@@ -24,3 +24,15 @@ class Transformer(nn.Module):
         # logits: (batch_size, n_vocab, n_vocab)
         logits = self.proj(dec_output)
         return logits.view(-1, logits.size(-1))
+
+    def greedy_decoder(self, x_enc, start_token):
+        enc_output = self.encoder(x_enc)
+        dec_input = torch.zeros_like(x_enc).type_as(x_enc)
+        next_token = start_token
+        for i in range(x_enc.shape[1]):
+            dec_input[:, i] = next_token
+            dec_output = self.decoder(dec_input, x_enc, enc_output)
+            logits = self.proj(dec_output)
+            prob = logits.argmax(dim=-1, keepdim=False)
+            next_token = prob[:, i]
+        return dec_input

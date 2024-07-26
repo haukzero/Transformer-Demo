@@ -35,17 +35,8 @@ def test(model, enc_x, dec_x, target, vocab):
     output = model(enc_x, dec_x)
     pred = output.argmax(dim=-1, keepdim=True)
 
-    pred_list, tgt_list = [ ], [ ]
-    for line in pred.view_as(target).cpu():
-        s = ""
-        for i in range(len(line)):
-            s += list(vocab.keys())[ line[ i ] ] + ' '
-        pred_list.append(s)
-    for line in target.cpu():
-        s = ""
-        for i in range(len(line)):
-            s += list(vocab.keys())[ line[ i ] ] + ' '
-        tgt_list.append(s)
+    pred_list = utils.vec2sen(pred.view_as(target).cpu(), vocab)
+    tgt_list = utils.vec2sen(target.cpu(), vocab)
 
     print(f"target: \n{tgt_list}")
     print(f"pred: \n{pred_list}")
@@ -67,9 +58,9 @@ if __name__ == '__main__':
         'I love you <end>',
         'I love you <end>',
     ]
-    e_x = utils.sen2vec(e_x).to(device)
-    d_x = utils.sen2vec(d_x).to(device)
-    t_x = utils.sen2vec(t_x).to(device)
+    e_x = utils.sen2vec(e_x, vocab).to(device)
+    d_x = utils.sen2vec(d_x, vocab).to(device)
+    t_x = utils.sen2vec(t_x, vocab).to(device)
 
     model = trm.Transformer(config[ 'n' ],
                             config[ 'n_vocab' ],
@@ -82,5 +73,9 @@ if __name__ == '__main__':
                             config[ 'max_len' ],
                             config[ 'dropout' ],
                             device)
-    train(model, e_x, d_x, t_x, device=device, path=config['save_path'])
-    test(model, e_x, d_x, t_x, vocab)
+
+    train(model, e_x, d_x, t_x, device=device, path=config[ 'save_path' ])
+    # model = torch.load(config['save_path'])
+    test_dec_input = model.greedy_decoder(e_x, vocab[ '<sta>' ])
+    print(f"greedy decoder input sequences:\n{utils.vec2sen(test_dec_input, vocab)}")
+    test(model, e_x, test_dec_input, t_x, vocab)

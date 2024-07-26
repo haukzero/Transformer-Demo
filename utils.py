@@ -17,15 +17,23 @@ def load_vocab(filename='model/vocab.json'):
     return vocab
 
 
-def sen2vec(sen, vocab='model/vocab.json'):
-    with open(vocab, 'r') as f:
-        vocab = json.load(f)
+def sen2vec(sen, vocab):
     vec = [ ]
     for sentence in sen:
         sen_list = sentence.split(' ')
         v = [ vocab[ i ] for i in sen_list ]
         vec.append(v)
     return torch.LongTensor(vec)
+
+
+def vec2sen(x, vocab):
+    sen = [ ]
+    for line in x:
+        s = ""
+        for i in range(len(line)):
+            s += list(vocab.keys())[ line[ i ] ] + ' '
+        sen.append(s[ :-1 ])
+    return sen
 
 
 def get_pad_mask(seq_q, seq_k, pad_token=0):
@@ -73,4 +81,7 @@ if __name__ == '__main__':
         '<sta> I very very very love you <pad> <end>',
         'I love you very much <pad> <pad> <pad> <pad>'
     ]
-    print(sen2vec(sentences))
+    vocab = load_vocab()
+    vec = sen2vec(sentences, vocab)
+    sen = vec2sen(vec, vocab)
+    print(sen == sentences)
