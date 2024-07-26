@@ -1,0 +1,13 @@
+{
+  "n": 6,
+  "n_vocab": 16,
+  "d_model": 1024,
+  "d_k": 256,
+  "d_v": 256,
+  "n_head": 32,
+  "d_ff": 4096,
+  "pad_token": 0,
+  "max_len": 32,
+  "dropout": 0.1,
+  "save_path": "model/my_model.pth"
+}
