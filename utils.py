@@ -17,11 +17,13 @@ def load_vocab(filename='model/vocab.json'):
     return vocab
 
 
-def sen2vec(sen, vocab):
+def sen2vec(sen, vocab, mex_len):
     vec = [ ]
     for sentence in sen:
         sen_list = sentence.split(' ')
         v = [ vocab[ i ] for i in sen_list ]
+        while len(v) < mex_len:
+            v.append(vocab[ '<pad>' ])
         vec.append(v)
     return torch.LongTensor(vec)
 
@@ -30,8 +32,15 @@ def vec2sen(x, vocab):
     sen = [ ]
     for line in x:
         s = ""
+        first_end_idx = None
         for i in range(len(line)):
-            s += list(vocab.keys())[ line[ i ] ] + ' '
+            token = list(vocab.keys())[ line[ i ] ]
+            if token != '<pad>':
+                if first_end_idx is None and token == '<end>':
+                    first_end_idx = i
+                if token == '<end>' and first_end_idx is not None and i != first_end_idx:
+                    continue
+                s += list(vocab.keys())[ line[ i ] ] + ' '
         sen.append(s[ :-1 ])
     return sen
 
@@ -78,10 +87,11 @@ def draw_loss(losses):
 
 if __name__ == '__main__':
     sentences = [
-        '<sta> I very very very love you <pad> <end>',
-        'I love you very much <pad> <pad> <pad> <pad>'
+        '<sta> I very very very love you <end>',
+        'I very love you'
     ]
     vocab = load_vocab()
-    vec = sen2vec(sentences, vocab)
+    vec = sen2vec(sentences, vocab, 16)
+    print(vec)
     sen = vec2sen(vec, vocab)
     print(sen == sentences)

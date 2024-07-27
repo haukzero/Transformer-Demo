@@ -5,7 +5,7 @@ from torch import nn, optim
 
 
 def train(model, enc_x, dec_x, target,
-          epoches=4, lr=1e-4,
+          epoches=1000, lr=5e-5,
           device='cpu', show_loss=True,
           save=True, path=None):
     model = model.to(device)
@@ -16,7 +16,8 @@ def train(model, enc_x, dec_x, target,
         optimizer.zero_grad()
         output = model(enc_x, dec_x)
         loss = criterion(output, target.contiguous().view(-1))
-        print(f"Epoch {i + 1}/{epoches}  Loss: {loss.item()}")
+        if (i + 1) % 10 == 0:
+            print(f"Epoch {i + 1}/{epoches}  Loss: {loss.item()}")
         losses.append(loss.item())
         loss.backward()
         optimizer.step()
@@ -42,21 +43,22 @@ if __name__ == '__main__':
     config = utils.load_config()
     vocab = utils.load_vocab()
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    # device = 'cpu'
     e_x = [
-        'I like you <pad>',
         'I very like you',
+        'I very very very like you',
     ]
     d_x = [
         '<sta> I love you',
-        '<sta> I love you',
+        '<sta> I very love you',
     ]
     t_x = [
         'I love you <end>',
-        'I love you <end>',
+        'I very love you <end>',
     ]
-    e_x = utils.sen2vec(e_x, vocab).to(device)
-    d_x = utils.sen2vec(d_x, vocab).to(device)
-    t_x = utils.sen2vec(t_x, vocab).to(device)
+    e_x = utils.sen2vec(e_x, vocab, config[ 'max_len' ]).to(device)
+    d_x = utils.sen2vec(d_x, vocab, config[ 'max_len' ]).to(device)
+    t_x = utils.sen2vec(t_x, vocab, config[ 'max_len' ]).to(device)
 
     model = trm.Transformer(config[ 'n' ],
                             config[ 'n_vocab' ],
@@ -73,6 +75,9 @@ if __name__ == '__main__':
     train(model, e_x, d_x, t_x, device=device, path=config[ 'save_path' ])
     # test(model, e_x, d_x, t_x, vocab)
     # model = torch.load(config['save_path'])
-    test_dec_input = model.greedy_decoder(e_x, vocab[ '<sta>' ])
+    test_dec_input = model.greedy_decoder(e_x,
+                                          vocab[ '<sta>' ],
+                                          vocab[ '<end>' ],
+                                          vocab[ '<pad>' ])
     print(f"greedy decoder input sequences:\n{utils.vec2sen(test_dec_input, vocab)}")
     test(model, e_x, test_dec_input, t_x, vocab)

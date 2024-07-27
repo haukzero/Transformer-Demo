@@ -10,6 +10,7 @@ class Transformer(nn.Module):
                  pad_token=0, max_len=5000,
                  dropout=0.5, device='cpu'):
         super().__init__()
+        self.device = device
         self.encoder = Encoder(n, n_vocab, d_model,
                                d_k, n_head, d_ff, pad_token,
                                max_len, dropout, device)
@@ -26,14 +27,26 @@ class Transformer(nn.Module):
         logits = self.proj(dec_output)
         return logits.view(-1, logits.size(-1))
 
-    def greedy_decoder(self, x_enc, start_token):
+    def greedy_decoder(self, x_enc, start_token, end_token, pad_token=0):
         enc_output = self.encoder(x_enc)
-        dec_input = torch.zeros_like(x_enc).type_as(x_enc)
-        next_token = start_token
-        for i in range(x_enc.shape[ 1 ]):
+        dec_input = torch.ones_like(x_enc).type_as(x_enc) * pad_token
+        next_token = torch.ones(x_enc.shape[ 0 ]).to(self.device) * start_token
+        end_token = torch.ones(x_enc.shape[ 0 ]).to(self.device) * end_token
+        stop_flag = torch.ones(x_enc.shape[ 0 ]).to(self.device) * pad_token
+        i = 0
+        while (not (torch.all(next_token == stop_flag))
+               and (not torch.all(next_token == end_token))
+               and i < x_enc.shape[ 1 ]):
+            # print(f"Iter: {i}")
+            # print(f" next_token: {next_token}")
             dec_input[ :, i ] = next_token
             dec_output = self.decoder(dec_input, x_enc, enc_output)
             logits = self.proj(dec_output)
             prob = logits.argmax(dim=-1, keepdim=False)
             next_token = prob[ :, i ]
+            i += 1
+            # print(f" prob: \n{prob}")
+            # print(f" next_token: \n{next_token}")
+            # print(f"dec_input: \n{dec_input}")
+            # print('=' * 20)
         return dec_input

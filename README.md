@@ -4,6 +4,11 @@
 
 本项目主要借鉴了 [nlp-tutorial/5-1.Transformer](https://github.com/graykode/nlp-tutorial/tree/master/5-1.Transformer) ，并在其基础上进行模块文件拆分及重要代码注释，使其结构更加清晰。
 
+- 2024.7.27 更新 :
+  - 输入序列无需手动填充空位，更新`utils/sen2vec()`函数，自动将输入序列用填充字符填充至`max_len`大小
+  - 更新`utils/vec2sen()`函数，自动去除末尾多余占位符和结束符
+  - 更新模型的`greedy_decoder()`，自动解码直到遇到全结束符或全占位符或长度超限
+
 ## How to Start
 
 ```bash
