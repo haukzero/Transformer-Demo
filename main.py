@@ -5,25 +5,21 @@ from torch import nn, optim
 
 
 def train(model, enc_x, dec_x, target,
-          epoches=1000, init_lr=0.1,
-          n_step=100, gamma=0.1,
+          epoches=4, lr=1e-4,
           device='cpu', show_loss=True,
           save=True, path=None):
     model = model.to(device)
     criterion = nn.CrossEntropyLoss().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=init_lr)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, n_step, gamma)
+    optimizer = optim.Adam(model.parameters(), lr=lr)
     losses = [ ]
     for i in range(epoches):
         optimizer.zero_grad()
         output = model(enc_x, dec_x)
         loss = criterion(output, target.contiguous().view(-1))
-        if (i + 1) % 10 == 0:
-            print(f"Epoch {i + 1}/{epoches}  Loss: {loss.item():.4f}")
+        print(f"Epoch {i + 1}/{epoches}  Loss: {loss.item()}")
         losses.append(loss.item())
         loss.backward()
         optimizer.step()
-        scheduler.step()
     if show_loss:
         utils.draw_loss(losses)
     if save:
@@ -45,10 +41,10 @@ def test(model, enc_x, dec_x, target, vocab):
 if __name__ == '__main__':
     config = utils.load_config()
     vocab = utils.load_vocab()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     e_x = [
         'I like you <pad>',
-        "I very like you",
+        'I very like you',
     ]
     d_x = [
         '<sta> I love you',
@@ -75,6 +71,7 @@ if __name__ == '__main__':
                             device)
 
     train(model, e_x, d_x, t_x, device=device, path=config[ 'save_path' ])
+    # test(model, e_x, d_x, t_x, vocab)
     # model = torch.load(config['save_path'])
     test_dec_input = model.greedy_decoder(e_x, vocab[ '<sta>' ])
     print(f"greedy decoder input sequences:\n{utils.vec2sen(test_dec_input, vocab)}")

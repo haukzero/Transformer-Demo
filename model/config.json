@@ -1,9 +1,9 @@
 {
   "n": 6,
-  "n_vocab": 16,
+  "n_vocab": 8,
   "d_model": 512,
-  "d_k": 128,
-  "d_v": 128,
+  "d_k": 64,
+  "d_v": 64,
   "n_head": 8,
   "d_ff": 2048,
   "pad_token": 0,
