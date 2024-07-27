@@ -28,25 +28,22 @@ class Transformer(nn.Module):
         return logits.view(-1, logits.size(-1))
 
     def greedy_decoder(self, x_enc, start_token, end_token, pad_token=0):
+        self.decoder.use_kv_cache()
         enc_output = self.encoder(x_enc)
         dec_input = torch.ones_like(x_enc).type_as(x_enc) * pad_token
         next_token = torch.ones(x_enc.shape[ 0 ]).to(self.device) * start_token
         end_token = torch.ones(x_enc.shape[ 0 ]).to(self.device) * end_token
         stop_flag = torch.ones(x_enc.shape[ 0 ]).to(self.device) * pad_token
         i = 0
+        pred = torch.ones_like(x_enc).type_as(x_enc) * pad_token
         while (not (torch.all(next_token == stop_flag))
                and (not torch.all(next_token == end_token))
                and i < x_enc.shape[ 1 ]):
-            # print(f"Iter: {i}")
-            # print(f" next_token: {next_token}")
             dec_input[ :, i ] = next_token
-            dec_output = self.decoder(dec_input, x_enc, enc_output)
+            dec_output = self.decoder(dec_input, x_enc, enc_output, i)
             logits = self.proj(dec_output)
-            prob = logits.argmax(dim=-1, keepdim=False)
-            next_token = prob[ :, i ]
+            pred = logits.argmax(dim=-1, keepdim=False)
+            next_token = pred[ :, i ]
             i += 1
-            # print(f" prob: \n{prob}")
-            # print(f" next_token: \n{next_token}")
-            # print(f"dec_input: \n{dec_input}")
-            # print('=' * 20)
-        return dec_input
+        self.decoder.clear_cache()
+        return pred

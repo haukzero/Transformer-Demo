@@ -32,15 +32,12 @@ def vec2sen(x, vocab):
     sen = [ ]
     for line in x:
         s = ""
-        first_end_idx = None
         for i in range(len(line)):
             token = list(vocab.keys())[ line[ i ] ]
             if token != '<pad>':
-                if first_end_idx is None and token == '<end>':
-                    first_end_idx = i
-                if token == '<end>' and first_end_idx is not None and i != first_end_idx:
-                    continue
                 s += list(vocab.keys())[ line[ i ] ] + ' '
+                if token == '<end>':
+                    break
         sen.append(s[ :-1 ])
     return sen
 
@@ -71,6 +68,7 @@ def bool_mask(pad_mask, attn_mask=None):
 def attention(Q, K, V, mask):
     d_k = K.shape[ -1 ]
     scores = (Q @ K.transpose(-1, -2)) / np.sqrt(d_k)
+    mask = mask[ :, :, :Q.shape[ 2 ], :K.shape[ 2 ] ]
     # 用 -1e10 代替 -inf 防止出现 nan
     scores.masked_fill_(mask, -1e10)
     return nn.Softmax(dim=-1)(scores) @ V

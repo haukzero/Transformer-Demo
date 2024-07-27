@@ -27,18 +27,6 @@ def train(model, enc_x, dec_x, target,
         torch.save(model, path)
 
 
-@torch.no_grad()
-def test(model, enc_x, dec_x, target, vocab):
-    output = model(enc_x, dec_x)
-    pred = output.argmax(dim=-1, keepdim=True)
-
-    pred_list = utils.vec2sen(pred.view_as(target).cpu(), vocab)
-    tgt_list = utils.vec2sen(target.cpu(), vocab)
-
-    print(f"target: \n{tgt_list}")
-    print(f"pred: \n{pred_list}")
-
-
 if __name__ == '__main__':
     config = utils.load_config()
     vocab = utils.load_vocab()
@@ -73,11 +61,10 @@ if __name__ == '__main__':
                             device)
 
     train(model, e_x, d_x, t_x, device=device, path=config[ 'save_path' ])
-    # test(model, e_x, d_x, t_x, vocab)
     # model = torch.load(config['save_path'])
-    test_dec_input = model.greedy_decoder(e_x,
-                                          vocab[ '<sta>' ],
-                                          vocab[ '<end>' ],
-                                          vocab[ '<pad>' ])
-    print(f"greedy decoder input sequences:\n{utils.vec2sen(test_dec_input, vocab)}")
-    test(model, e_x, test_dec_input, t_x, vocab)
+
+    pred = model.greedy_decoder(e_x,
+                                vocab[ '<sta>' ],
+                                vocab[ '<end>' ],
+                                vocab[ '<pad>' ])
+    print(utils.vec2sen(pred, vocab))
