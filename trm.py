@@ -2,13 +2,15 @@ import torch
 from torch import nn
 from enc import Encoder
 from dec import Decoder
+from moe import MoE
 
 
 class Transformer(nn.Module):
     def __init__(self, n, n_vocab, d_model,
                  d_k, d_v, n_head, d_ff,
+                 n_expert, d_exp, top_k,
                  pad_token=0, max_len=5000,
-                 dropout=0.5, device='cpu'):
+                 dropout=0.1, device='cpu'):
         super().__init__()
         self.device = device
         self.encoder = Encoder(n, n_vocab, d_model,
@@ -18,7 +20,7 @@ class Transformer(nn.Module):
                                d_v, n_head, d_ff, pad_token,
                                max_len, dropout, device)
         self.decoder.embd.weight = self.encoder.embd.weight
-        self.proj = nn.Linear(d_model, n_vocab).to(device)
+        self.proj = MoE(d_model, n_expert, d_exp, top_k, dropout).to(device)
 
     def forward(self, x_enc, x_dec):
         enc_output = self.encoder(x_enc)
